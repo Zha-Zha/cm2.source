@@ -15,8 +15,8 @@ import (
 var (
 	l         string
 	p         string
-	glistener *net.TCPListener
-	runstate  int32
+	gListener *net.TCPListener
+	runState  int32
 )
 
 func usage() {
@@ -57,7 +57,7 @@ func main() {
 
 	// 如果是继承过来的，那么等待旧进程传输旧的 listener 过来
 	if IsInherit() {
-		glistener, ud, err = GetInheritListeners(time.Duration(15) * time.Second)
+		gListener, ud, err = GetInheritListeners(time.Duration(15) * time.Second)
 		if err != nil {
 			log.Printf("net listen inheritlistener failed %s\n", err)
 			return
@@ -72,7 +72,7 @@ func main() {
 			return
 		}
 		log.Printf("net listen %s\n", l)
-		glistener = li.(*net.TCPListener)
+		gListener = li.(*net.TCPListener)
 	}
 
 	// 通知旧进程上一次继承开关通知已经结束，通知完成之后，才能关闭前一个listener
@@ -81,11 +81,11 @@ func main() {
 	}
 
 	wg.Add(1)
-	go Server(glistener, wg, stopChan, transChan)
+	go Server(gListener, wg, stopChan, transChan)
 
 	// 监听下一次的继承事件，需要等待此次继承事件完全完成；进程关闭前，等待5s看是否有新进程过来获取数据
 	wg.Add(1)
-	go ListenNextInherit(time.Duration(5)*time.Second, wg, stopChan, transChan)
+	go ListenNextInherit(wg, stopChan, transChan)
 
 	// 如果需要平滑将 数据/listener/connections 传递出去，那么就稍微等待一下
 	select {
@@ -95,7 +95,7 @@ func main() {
 	case <-sig:
 	}
 
-	_ = glistener.Close()
+	_ = gListener.Close()
 	close(stopChan)
 	wg.Wait()
 }

@@ -32,7 +32,7 @@ func HandleReply(wg *sync.WaitGroup, dataBuf []byte, conn net.Conn, stopChan cha
 	waitReadStop := make(chan bool)
 	go func() {
 		for {
-			line, err = r.ReadSlice(Seperator)
+			line, err = r.ReadSlice(Separator)
 			if err != nil {
 				if err == io.EOF {
 					log.Printf("disconnect from client eof\n")
@@ -41,14 +41,14 @@ func HandleReply(wg *sync.WaitGroup, dataBuf []byte, conn net.Conn, stopChan cha
 				} else {
 					log.Printf("tcp net read err %s\n", err)
 				}
-				if 1 == atomic.LoadInt32(&runstate) {
+				if 1 == atomic.LoadInt32(&runState) {
 					close(waitReadStop)
 				}
 				return
 			}
 			line = bytes.Join(bytes.Split(line, []byte{'\n'}), []byte{})
 			line = bytes.Join(bytes.Split(line, []byte{'\r'}), []byte{})
-			_, _ = w.Write(append([]byte(append(append(append([]byte(p), []byte(" reply : ")...), line...))), '\n'))
+			_, _ = w.Write(append(append(append(append([]byte(p), []byte(" reply : ")...), line...)), '\n'))
 			line = nil
 			_ = w.Flush()
 		}

@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 )
 
-// 注意，同一个conn一定是先有读再有写，这样才能在新进程中生成一个conntion ID，write buffer过来的时候，直接着地conntion ID
+// 注意，同一个conn一定是先有读再有写，这样才能在新进程中生成一个connection ID，write buffer过来的时候，直接着地connection ID
 // 当然这里只考虑 read buffer
 /**
  *  transfer read protocol
@@ -59,9 +59,9 @@ start:
 		log.Printf("not support write!!!!!!!!")
 		return
 	case 0:
-		conn, err := expressrecvFd(oob)
+		conn, err := expressRecvFd(oob)
 		if err != nil {
-			log.Printf("expressrecvFd failed, %s", err)
+			log.Printf("expressRecvFd failed, %s", err)
 			return
 		}
 		cid := atomic.AddUint32(&id, 1)
@@ -88,7 +88,7 @@ start:
 	}
 }
 
-func expressrecvFd(oob []byte) (net.Conn, error) {
+func expressRecvFd(oob []byte) (net.Conn, error) {
 	scms, err := unix.ParseSocketControlMessage(oob)
 	if err != nil {
 		return nil, fmt.Errorf("ParseSocketControlMessage: %v", err)

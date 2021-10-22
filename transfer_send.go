@@ -113,6 +113,6 @@ func transferSendBytes(uc *net.UnixConn, b []byte) error {
 
 func transferSendID(uc *net.UnixConn, id uint32) error {
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, uint32(id))
+	binary.BigEndian.PutUint32(b, id)
 	return transferSendBytes(uc, b)
 }

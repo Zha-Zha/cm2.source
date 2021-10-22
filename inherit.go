@@ -16,7 +16,7 @@ var (
 	TransferListenDomainSocket = filepath.Join("./", "listen.sock")
 	TransferConnDomainSocket   = filepath.Join("./", "conn.sock")
 	TransSwitchDomainSocket    = filepath.Join("./", "switch.sock")
-	Seperator                  = byte('#')
+	Separator                  = byte('#')
 )
 
 // 尝试连接旧进程的switch.sock，如果通信成功，并且解析内容成功，就知道需要传输旧的listener 和 connection
@@ -144,7 +144,7 @@ func GetInheritConnections(timeout time.Duration, wg *sync.WaitGroup, stopChan c
 }
 
 func sendInheritListeners() (net.Conn, error) {
-	lf, err := glistener.File()
+	lf, err := gListener.File()
 	if err != nil {
 		return nil, err
 	}
@@ -180,10 +180,10 @@ func sendInheritListeners() (net.Conn, error) {
 }
 
 // 一旦发现有新进程过来通信，就立刻 close(transChan) 通知其他协程进行transfer
-func ListenNextInherit(waittime time.Duration, wg *sync.WaitGroup, stopChan chan bool, transChan chan bool) {
+func ListenNextInherit(wg *sync.WaitGroup, stopChan chan bool, transChan chan bool) {
 	defer wg.Done()
 	// 进程进入关闭状态，并且相关listener已经发送了，那么就可以关闭之前的listener
-	defer glistener.Close()
+	defer gListener.Close()
 
 	_ = syscall.Unlink(TransSwitchDomainSocket)
 
@@ -210,7 +210,7 @@ func ListenNextInherit(waittime time.Duration, wg *sync.WaitGroup, stopChan chan
 				}
 				return
 			}
-			_, err = uc.Write([]byte{0})
+			_, err = uc.Write([]byte{0}) // 是几无所谓，一个字节就行
 			if err != nil {
 				log.Printf("ListenNextInherit Accept error :%v\n", err)
 				continue
@@ -227,7 +227,7 @@ func ListenNextInherit(waittime time.Duration, wg *sync.WaitGroup, stopChan chan
 				log.Printf("ListenNextInherit new main start failed n = %d\n", n)
 				continue
 			}
-			atomic.StoreInt32(&runstate, 1)
+			atomic.StoreInt32(&runState, 1)
 			close(transChan)
 		}
 	}()
